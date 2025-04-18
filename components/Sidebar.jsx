@@ -31,7 +31,7 @@ export default function Sidebar() {
   const path = usePathname() || '/'
   return (
     <nav className="w-64 bg-white border-r">
-      <div className="p-4 text-2xl font-bold text-blue-600">RecruitmentPlus</div>
+      <div className="p-4 text-2xl font-bold text-blue-600">RecrutementPlus</div>
       <ul>
         {navItems.map(({ label, href, icon: Icon }) => (
           <li key={href}>
