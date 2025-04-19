@@ -1,154 +1,214 @@
 'use client'
 
-import { MoreVertical } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Filter, SlidersHorizontal, Plus } from 'lucide-react'
+import AddCandidateModal from '../../components/AddCandidateModal'
 
-export default function CompaniesPage() {
-    const companies = [
-        {
-            id: 1,
-            logo: '/logos/google.png',
-            name: 'TechCorp Inc.',
-            size: '1000-5000 employees',
-            industry: 'Technology',
-            location: 'San Francisco, CA',
-            contactName: 'John Smith',
-            contactEmail: 'john.smith@techcorp.com',
-            positions: 12,
-            status: 'Active',
-        },
-        {
-            id: 2,
-            logo: '/logos/amazon.png',
-            name: 'DesignHub',
-            size: '100-500 employees',
-            industry: 'Design Services',
-            location: 'New York, NY',
-            contactName: 'Sarah Johnson',
-            contactEmail: 'sarah.j@designhub.com',
-            positions: 5,
-            status: 'Active',
-        },
-        // …add more as needed
-    ]
+export default function CandidatesPage() {
+  const [isAddCandidateModalOpen, setIsAddCandidateModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeFilter, setActiveFilter] = useState('All')
+  const [sortOption, setSortOption] = useState('newest')
+  
+  // Initial candidates data
+  const [candidates, setCandidates] = useState([
+    {
+      id: 1,
+      name: 'Emma Thompson',
+      position: 'Frontend Developer',
+      experience: '4 years',
+      location: 'New York, NY',
+      status: 'Hired',
+      rating: 5,
+      skills: ['React', 'TypeScript', 'Node.js'],
+      email: 'emma.t@example.com',
+      lastContact: '2 days ago',
+      avatar: 'ET'
+    },
+    {
+      id: 2,
+      name: 'Michael Chen',
+      position: 'Frontend Developer',
+      experience: '5 years',
+      location: 'San Francisco, CA',
+      status: 'Interview',
+      rating: 4,
+      skills: ['React', 'TypeScript', 'Tailwind CSS'],
+      email: 'michael.chen@example.com',
+      lastContact: '2 days ago',
+      avatar: 'MC'
+    },
+    {
+      id: 3,
+      name: 'Jessica Reynolds',
+      position: 'UX Designer',
+      experience: '3 years',
+      location: 'Austin, TX',
+      status: 'Assessment',
+      rating: 5,
+      skills: ['Figma', 'User Research', 'Prototyping'],
+      email: 'jessica.r@example.com',
+      lastContact: '5 days ago',
+      avatar: 'JR'
+    },
+    {
+      id: 4,
+      name: 'Ahmed Hassan',
+      position: 'Product Manager',
+      experience: '7 years',
+      location: 'New York, NY',
+      status: 'Screening',
+      rating: 3,
+      skills: ['Agile', 'Product Strategy', 'Data Analysis'],
+      email: 'ahmed.h@example.com',
+      lastContact: 'Today',
+      avatar: 'AH'
+    },
+    {
+      id: 5,
+      name: 'Sophia Martinez',
+      position: 'Backend Developer',
+      experience: '4 years',
+      location: 'Chicago, IL',
+      status: 'New',
+      rating: 4,
+      skills: ['Node.js', 'Python', 'MongoDB'],
+      email: 'sophia.m@example.com',
+      lastContact: '1 week ago',
+      avatar: 'SM'
+    },
+    {
+      id: 6,
+      name: 'Thomas Wilson',
+      position: 'Marketing Specialist',
+      experience: '2 years',
+      location: 'Denver, CO',
+      status: 'Offer',
+      rating: 4,
+      skills: ['SEO', 'Content Marketing', 'Analytics'],
+      email: 'thomas.w@example.com',
+      lastContact: '3 days ago',
+      avatar: 'TW'
+    },
+  ])
 
-    return (
-        <div className="space-y-6">
-            {/* Title + Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <h1 className="text-3xl font-bold text-gray-900">Candidates</h1>
+  // Filter candidates based on search query and active filter
+  const filteredCandidates = candidates.filter(candidate => {
+    const matchesSearch = candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         candidate.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         candidate.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    if (activeFilter === 'All') return matchesSearch
+    return matchesSearch && candidate.status === activeFilter
+  })
 
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    + Add Candidate
-                </button>
-            </div>
+  // Sort candidates based on the selected sort option
+  const sortedCandidates = [...filteredCandidates].sort((a, b) => {
+    if (sortOption === 'newest') return b.id - a.id
+    if (sortOption === 'oldest') return a.id - b.id
+    if (sortOption === 'nameAsc') return a.name.localeCompare(b.name)
+    if (sortOption === 'nameDesc') return b.name.localeCompare(a.name)
+    return 0
+  })
 
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-                <input
-                    type="text"
-                    placeholder="Search companies..."
-                    className="px-3 py-2 border rounded-md focus:ring focus:ring-blue-200 flex-1 min-w-[200px]"
-                />
-                <select className="px-3 py-2 border rounded-md focus:ring focus:ring-blue-200">
-                    <option>Position</option>
-                    <option>Technology</option>
-                    <option>Design Services</option>
-                </select>
-                <select className="px-3 py-2 border rounded-md focus:ring focus:ring-blue-200">
-                    <option>Status</option>
-                    <option>Active</option>
-                    <option>Inactive</option>
-                </select>
-                <button className="px-3 py-2 border rounded-md text-gray-700 hover:bg-gray-100">
-                    More Filters
-                </button>
-            </div>
+  // Handle adding a new candidate
+  const handleAddCandidate = (newCandidate) => {
+    setCandidates(prevCandidates => [newCandidate, ...prevCandidates])
+  }
 
-            {/* Table */}
-            <div className="overflow-x-auto bg-white rounded-lg shadow">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Candidate
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Position
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Stage
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Applied Date
-                            </th>
-
-                            <th className="px-6 py-3 relative">
-                                <span className="sr-only">Actions</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {companies.map((c) => (
-                            <tr key={c.id}>
-                                {/* Company + Logo */}
-                                <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
-                                    <img
-                                        src={c.logo}
-                                        alt={c.name}
-                                        className="w-8 h-8 object-contain rounded"
-                                    />
-                                    <div>
-                                        <div className="text-sm font-medium text-gray-900">{c.name}</div>
-                                        <div className="text-xs text-gray-500">{c.size}</div>
-                                    </div>
-                                </td>
-
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {c.industry}
-                                </td>
-                                {/* Status */}
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span
-                                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${c.status === 'Active'
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-gray-100 text-gray-800'
-                                            }`}
-                                    >
-                                        {c.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {c.location}
-                                </td>
-
-
-                                {/* Contact */}
-                                {/* <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">{c.contactName}</div>
-                                    <div className="text-xs text-gray-500">{c.contactEmail}</div>
-                                </td> */}
-
-                                {/* Positions */}
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                    {c.positions} Positions
-                                </td>
-
-
-
-                                {/* Actions */}
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <button className="text-gray-500 hover:text-gray-700">
-                                        <MoreVertical className="h-5 w-5" />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+  return (
+    <div className="flex-1 p-4 md:p-6">
+      {/* Page header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-[var(--foreground)]">Candidates</h1>
+          <p className="text-[var(--muted-foreground)]">Manage your talent pool</p>
         </div>
-    )
+        <button
+          onClick={() => setIsAddCandidateModalOpen(true)}
+          className="mt-4 md:mt-0 px-4 py-2 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-light)] transition-colors flex items-center justify-center"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          <span>Add Candidate</span>
+        </button>
+      </div>
+
+      {/* Search and filters */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="h-4 w-4 text-[var(--muted-foreground)]" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search candidates by name, skills or position..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-[var(--primary)]"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveFilter(activeFilter === 'All' ? 'Hired' : 'All')}
+            className="inline-flex items-center px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] hover:bg-[var(--secondary)] transition-colors"
+          >
+            <Filter className="mr-2 h-4 w-4 text-[var(--primary)]" />
+            <span>{activeFilter === 'All' ? 'Show Hired' : 'Show All'}</span>
+          </button>
+
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="nameAsc">Name (A-Z)</option>
+            <option value="nameDesc">Name (Z-A)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Candidate list */}
+      <div className="bg-[var(--card)] rounded-lg border border-[var(--border)] overflow-hidden">
+        <div className="divide-y divide-[var(--border)]">
+          {sortedCandidates.length > 0 ? (
+            sortedCandidates.map((candidate) => (
+              <div key={candidate.id} className="p-4 hover:bg-[var(--accent)] transition-colors">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center font-medium text-sm">
+                    {candidate.avatar}
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-[var(--foreground)]">{candidate.name}</div>
+                    <div className="text-xs text-[var(--muted-foreground)]">{candidate.email}</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-[var(--foreground)]">
+                  <span>{candidate.position}</span> - <span>{candidate.experience}</span> - <span>{candidate.location}</span>
+                </div>
+                <div className="mt-1 text-xs text-[var(--muted-foreground)]">
+                  Last contact: {candidate.lastContact}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-6 text-center text-[var(--muted-foreground)]">
+              No candidates match your search criteria. Try adjusting your filters or adding new candidates.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add Candidate Modal */}
+      {isAddCandidateModalOpen && (
+        <AddCandidateModal 
+          isOpen={isAddCandidateModalOpen}
+          onClose={() => setIsAddCandidateModalOpen(false)}
+          onAddCandidate={handleAddCandidate}
+        />
+      )}
+    </div>
+  )
 }

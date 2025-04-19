@@ -30,23 +30,44 @@ const navItems = [
 export default function Sidebar() {
   const path = usePathname() || '/'
   return (
-    <nav className="w-64 bg-white border-r">
-      <div className="p-4 text-2xl font-bold text-blue-600">RecrutementPlus</div>
-      <ul>
-        {navItems.map(({ label, href, icon: Icon }) => (
-          <li key={href}>
-            <Link
-              href={href}
-              className={`flex items-center px-4 py-3 hover:bg-gray-100 ${
-                path === href ? 'bg-gray-200 font-medium' : 'text-gray-700'
-              }`}
-            >
-              <Icon className="mr-3 h-5 w-5" />
-              {label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <nav className="w-64 bg-[var(--card)] border-r border-[var(--border)] shadow-soft flex flex-col">
+      <div className="p-6">
+        <div className="text-2xl font-bold gradient-primary text-[var(--primary-foreground)] px-4 py-2 rounded-lg flex items-center justify-center">
+          RecruitmentPlus
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto px-3 py-2">
+        <ul className="space-y-1">
+          {navItems.map(({ label, href, icon: Icon }) => {
+            const isActive = path === href;
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-[var(--primary)] text-[var(--primary-foreground)] font-medium shadow-soft' 
+                      : 'text-[var(--foreground)] hover:bg-[var(--secondary)] hover:text-[var(--primary)]'
+                  }`}
+                >
+                  <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-[var(--primary-foreground)]' : ''}`} />
+                  <span>{label}</span>
+                  {isActive && (
+                    <div className="ml-auto h-2 w-2 rounded-full bg-[var(--accent)]"></div>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      
+      <div className="p-4 border-t border-[var(--border)]">
+        <div className="text-xs text-[var(--muted-foreground)] text-center">
+          RecruitmentPlus CRM v1.0
+        </div>
+      </div>
     </nav>
   )
 }
