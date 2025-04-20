@@ -139,6 +139,7 @@ export default function AutomationLogsPage() {
   const [logs] = useState<ActivityLog[]>(sampleActivityLogs)
   const [filteredLogs, setFilteredLogs] = useState<ActivityLog[]>(sampleActivityLogs)
   const [searchQuery, setSearchQuery] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dateRange, setDateRange] = useState({
     from: '',
     to: '',
