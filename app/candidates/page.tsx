@@ -7,12 +7,12 @@ import {
   Plus, 
   MoreHorizontal, 
   Search, 
-  Filter, 
-  Download, 
+  //Download, 
   ChevronLeft, 
   ChevronRight
 } from 'lucide-react'
 import { AddCandidateModal } from '../candidates/AddCandidateModal'
+import { FilterDropdown } from './FilterDropdown'
 
 interface Candidate {
   id: string
@@ -32,6 +32,20 @@ const sampleCandidates: Candidate[] = [
   { id: '6', name: 'Frank Miller', stage: 'Client Waiting', status: 'Pending', appliedDate: '2025-04-02' },
 ]
 
+// Map filter IDs to actual values
+const stageIdToValue: Record<string, string> = {
+  'stage-received': 'Received',
+  'stage-interview-scheduled': 'Interview Scheduled',
+  'stage-interview-completed': 'Interview Completed',
+  'stage-client-waiting': 'Client Waiting'
+}
+
+const statusIdToValue: Record<string, string> = {
+  'status-new': 'New',
+  'status-in-progress': 'In Progress',
+  'status-pending': 'Pending'
+}
+
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>(sampleCandidates)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -50,6 +64,45 @@ export default function CandidatesPage() {
     setCandidates([newCandidate, ...candidates])
   }
 
+  const handleFilterChange = (filters: {
+    stage: string[];
+    status: string[];
+    appliedDateFrom: string;
+    appliedDateTo: string;
+  }) => {
+    // Apply filters to candidates
+    const filteredCandidates = sampleCandidates.filter(candidate => {
+      // Check stage filter
+      if (filters.stage.length > 0) {
+        const stageValues = filters.stage.map(id => stageIdToValue[id]);
+        if (!stageValues.includes(candidate.stage)) {
+          return false;
+        }
+      }
+      
+      // Check status filter
+      if (filters.status.length > 0) {
+        const statusValues = filters.status.map(id => statusIdToValue[id]);
+        if (!statusValues.includes(candidate.status)) {
+          return false;
+        }
+      }
+      
+      // Check applied date range
+      if (filters.appliedDateFrom && candidate.appliedDate < filters.appliedDateFrom) {
+        return false;
+      }
+      
+      if (filters.appliedDateTo && candidate.appliedDate > filters.appliedDateTo) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setCandidates(filteredCandidates);
+  };
+
   return (
     <div className="space-y-8">
       {/* Page Title and Actions */}
@@ -66,12 +119,7 @@ export default function CandidatesPage() {
               className="pl-10 pr-4 py-2 w-64 border border-neutral-700 bg-neutral-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F]"
             />
           </div>
-          <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Filter size={18} className="mr-2" /> Filter
-          </button>
-          <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Download size={18} className="mr-2" /> Export
-          </button>
+          <FilterDropdown onFilterChange={handleFilterChange} />
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
@@ -139,7 +187,7 @@ export default function CandidatesPage() {
         </div>
         <div className="flex items-center justify-between px-6 py-3 border-t border-neutral-700 bg-neutral-800">
           <div className="text-sm text-neutral-400">
-            Showing <span className="font-medium text-neutral-300">1</span> to <span className="font-medium text-neutral-300">6</span> of <span className="font-medium text-neutral-300">42</span> candidates
+            Showing <span className="font-medium text-neutral-300">1</span> to <span className="font-medium text-neutral-300">{candidates.length}</span> of <span className="font-medium text-neutral-300">42</span> candidates
           </div>
           <div className="flex items-center space-x-2">
             <button className="px-3 py-1 border border-neutral-700 rounded text-sm text-neutral-400 hover:bg-neutral-700 disabled:opacity-50 disabled:hover:bg-transparent" disabled title="Previous page">

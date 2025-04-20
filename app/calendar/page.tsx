@@ -10,10 +10,10 @@ import {
   Calendar as CalendarIcon,
   List,
   Grid,
-  Filter,
   MoreHorizontal
 } from 'lucide-react'
 import { AddEventModal } from './AddEventModal'
+import { FilterDropdown } from './FilterDropdown'
 
 // Sample calendar data
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -32,12 +32,54 @@ const initialEvents = [
   { id: 6, title: 'Interview Panel - Senior Dev', type: 'interview', date: '2025-04-24', time: '1:00 PM', duration: 90 },
 ];
 
+// Map filter IDs to actual values
+const eventTypeIdToValue: Record<string, string> = {
+  'type-interview': 'interview',
+  'type-meeting': 'meeting',
+  'type-screening': 'screening',
+  'type-internal': 'internal',
+  'type-followup': 'followup'
+}
+
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 3, 20)); // April 20, 2025
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
   const [events, setEvents] = useState(initialEvents);
+  const [filteredEvents, setFilteredEvents] = useState(initialEvents);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
+  const handleFilterChange = (filters: {
+    eventTypes: string[];
+    dateRange: {
+      from: string;
+      to: string;
+    }
+  }) => {
+    // Apply filters to events
+    const filtered = events.filter(event => {
+      // Check event type filter
+      if (filters.eventTypes.length > 0) {
+        const typeValues = filters.eventTypes.map(id => eventTypeIdToValue[id]);
+        if (!typeValues.includes(event.type)) {
+          return false;
+        }
+      }
+      
+      // Check date range
+      if (filters.dateRange.from && event.date < filters.dateRange.from) {
+        return false;
+      }
+      
+      if (filters.dateRange.to && event.date > filters.dateRange.to) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setFilteredEvents(filtered);
+  };
+
   // Generate days for the current month view
   const generateCalendarDays = () => {
     const year = currentDate.getFullYear();
@@ -75,7 +117,7 @@ export default function CalendarPage() {
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
       const dateString = date.toISOString().split('T')[0];
-      const hasEvents = events.some(event => event.date === dateString);
+      const hasEvents = filteredEvents.some(event => event.date === dateString);
       
       days.push({
         date,
@@ -173,9 +215,7 @@ export default function CalendarPage() {
             </button>
           </div>
           
-          <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Filter size={16} className="mr-2" /> Filter
-          </button>
+          <FilterDropdown onFilterChange={handleFilterChange} />
           
           <button
             onClick={() => setIsAddModalOpen(true)} 
@@ -235,7 +275,7 @@ export default function CalendarPage() {
               {/* Event indicators */}
               {day.hasEvents && day.isCurrentMonth && (
                 <div className="mt-2 space-y-1">
-                  {events
+                  {filteredEvents
                     .filter(event => event.date === day.date.toISOString().split('T')[0])
                     .slice(0, 2)
                     .map(event => (
@@ -254,9 +294,9 @@ export default function CalendarPage() {
                     ))
                   }
                   
-                  {events.filter(event => event.date === day.date.toISOString().split('T')[0]).length > 2 && (
+                  {filteredEvents.filter(event => event.date === day.date.toISOString().split('T')[0]).length > 2 && (
                     <div className="text-xs text-neutral-400 pl-1">
-                      +{events.filter(event => event.date === day.date.toISOString().split('T')[0]).length - 2} more
+                      +{filteredEvents.filter(event => event.date === day.date.toISOString().split('T')[0]).length - 2} more
                     </div>
                   )}
                 </div>
@@ -274,7 +314,7 @@ export default function CalendarPage() {
         </div>
         
         <div className="space-y-3">
-          {events
+          {filteredEvents
             .filter(event => event.date === '2025-04-20')
             .map(event => (
               <div key={event.id} className="flex p-3 bg-neutral-700/30 rounded-lg border border-neutral-700 hover:border-[#1D4E5F]/40 transition-colors">

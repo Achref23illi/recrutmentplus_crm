@@ -7,7 +7,6 @@ import {
   Plus, 
   MoreHorizontal, 
   Search, 
-  Filter, 
   Download, 
   ChevronLeft, 
   ChevronRight,
@@ -15,6 +14,7 @@ import {
   Briefcase
 } from 'lucide-react'
 import { AddCompanyModal } from './AddCompanyModal'
+import { FilterDropdown } from './FilterDropdown'
 
 interface Company {
   id: string
@@ -33,6 +33,15 @@ const sampleCompanies: Company[] = [
   { id: '5', name: 'DataVision', industry: 'Tech', openPositions: 6, contact: 'hiring@datavision.com' },
   { id: '6', name: 'BuildWell', industry: 'Construction', openPositions: 4, contact: 'hr@buildwell.com' },
 ]
+
+// Map filter IDs to actual values
+const industryIdToValue: Record<string, string> = {
+  'industry-tech': 'Tech',
+  'industry-healthcare': 'Healthcare',
+  'industry-finance': 'Finance',
+  'industry-environmental': 'Environmental',
+  'industry-construction': 'Construction'
+}
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>(sampleCompanies)
@@ -63,6 +72,45 @@ export default function CompaniesPage() {
     setCompanies([newCompany, ...companies])
   }
 
+  const handleFilterChange = (filters: {
+    industry: string[];
+    openPositions: string[];
+  }) => {
+    // Apply filters to companies
+    const filteredCompanies = sampleCompanies.filter(company => {
+      // Check industry filter
+      if (filters.industry.length > 0) {
+        const industryValues = filters.industry.map(id => industryIdToValue[id]);
+        if (!industryValues.includes(company.industry)) {
+          return false;
+        }
+      }
+      
+      // Check open positions filter
+      if (filters.openPositions.length > 0) {
+        // Handle position ranges
+        return filters.openPositions.some(positionFilter => {
+          switch(positionFilter) {
+            case 'positions-0':
+              return company.openPositions === 0;
+            case 'positions-1-5':
+              return company.openPositions >= 1 && company.openPositions <= 5;
+            case 'positions-6-10':
+              return company.openPositions >= 6 && company.openPositions <= 10;
+            case 'positions-10+':
+              return company.openPositions > 10;
+            default:
+              return true;
+          }
+        });
+      }
+      
+      return true;
+    });
+    
+    setCompanies(filteredCompanies);
+  };
+
   return (
     <div className="space-y-8">
       {/* Page Title and Actions */}
@@ -79,9 +127,7 @@ export default function CompaniesPage() {
               className="pl-10 pr-4 py-2 w-64 border border-neutral-700 bg-neutral-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F]"
             />
           </div>
-          <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Filter size={18} className="mr-2" /> Filter
-          </button>
+          <FilterDropdown onFilterChange={handleFilterChange} />
           <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
             <Download size={18} className="mr-2" /> Export
           </button>

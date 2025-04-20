@@ -10,11 +10,11 @@ import {
   Clock, 
   ArrowLeft, 
   Search, 
-  Filter,
   Download,
-  Calendar 
 } from 'lucide-react'
 import Link from 'next/link'
+import { DateRangePicker } from './DateRangePicker'
+import { FilterDropdown } from './FilterDropdown'
 
 // Types for the activity logs
 interface ActivityLog {
@@ -121,16 +121,112 @@ const sampleActivityLogs: ActivityLog[] = [
   }
 ]
 
+// Map filter IDs to actual values
+const statusIdToValue: Record<string, string> = {
+  'status-success': 'success',
+  'status-failure': 'failure',
+  'status-warning': 'warning',
+  'status-pending': 'pending'
+}
+
+const workflowIdToValue: Record<string, string> = {
+  'wf-new-application': 'New Application Notification',
+  'wf-client-followup': 'Client Follow-Up',
+  'wf-candidate-onboarding': 'Candidate Onboarding'
+}
+
 export default function AutomationLogsPage() {
   const [logs] = useState<ActivityLog[]>(sampleActivityLogs)
+  const [filteredLogs, setFilteredLogs] = useState<ActivityLog[]>(sampleActivityLogs)
   const [searchQuery, setSearchQuery] = useState('')
+  const [dateRange, setDateRange] = useState({
+    from: '',
+    to: '',
+    label: 'Last 7 days'
+  })
   
-  // Filter logs based on search query
-  const filteredLogs = logs.filter(log => 
-    log.workflowName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    log.details?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Handle search and filter changes
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    applyFiltersAndSearch(query);
+  };
+  
+  // Apply all filters and search
+  const applyFiltersAndSearch = (query: string = searchQuery) => {
+    let filtered = [...logs];
+    
+    // Apply search query
+    if (query) {
+      filtered = filtered.filter(log => 
+        log.workflowName.toLowerCase().includes(query.toLowerCase()) ||
+        log.message.toLowerCase().includes(query.toLowerCase()) ||
+        log.details?.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+    
+    setFilteredLogs(filtered);
+  };
+
+  const handleDateRangeChange = (range: { from: string; to: string; label: string }) => {
+    setDateRange(range);
+    
+    // Apply date filter to logs
+    const filtered = sampleActivityLogs.filter(log => {
+      const logDate = log.timestamp.split(' ')[0]; // Extract date part
+      if (range.from && logDate < range.from) {
+        return false;
+      }
+      if (range.to && logDate > range.to) {
+        return false;
+      }
+      return true;
+    });
+    
+    setFilteredLogs(filtered);
+    
+    // Re-apply search query if needed
+    if (searchQuery) {
+      handleSearch(searchQuery);
+    }
+  };
+
+  const handleFilterChange = (filters: {
+    status: string[];
+    workflow: string[];
+  }) => {
+    // Apply filters to logs
+    const filtered = logs.filter(log => {
+      // Check status filter
+      if (filters.status.length > 0) {
+        const statusValues = filters.status.map(id => statusIdToValue[id]);
+        if (!statusValues.includes(log.status)) {
+          return false;
+        }
+      }
+      
+      // Check workflow filter
+      if (filters.workflow.length > 0) {
+        const workflowValues = filters.workflow.map(id => workflowIdToValue[id]);
+        if (!workflowValues.includes(log.workflowName)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+    
+    setFilteredLogs(filtered);
+    
+    // Re-apply search query if needed
+    if (searchQuery) {
+      const searchFiltered = filtered.filter(log => 
+        log.workflowName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.details?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredLogs(searchFiltered);
+    }
+  };
   
   // Status icon renderer
   const renderStatusIcon = (status: string) => {
@@ -171,17 +267,13 @@ export default function AutomationLogsPage() {
             <input 
               type="text"
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
               placeholder="Search logs..."
               className="pl-10 pr-4 py-2 w-64 border border-neutral-700 bg-neutral-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F]"
             />
           </div>
-          <div className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Calendar size={16} className="mr-2" /> Last 7 days
-          </div>
-          <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Filter size={18} className="mr-2" /> Filter
-          </button>
+          <DateRangePicker onDateRangeChange={handleDateRangeChange} />
+          <FilterDropdown onFilterChange={handleFilterChange} />
           <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
             <Download size={18} className="mr-2" /> Export
           </button>
