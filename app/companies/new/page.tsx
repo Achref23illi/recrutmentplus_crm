@@ -4,6 +4,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
+import { ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
 
 export default function NewCompanyPage() {
   const router = useRouter()
@@ -29,12 +31,19 @@ export default function NewCompanyPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add Company</h2>
-      <Card>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Page heading with back button */}
+      <div className="mb-6 flex items-center">
+        <Link href="/companies" className="mr-4 p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800">
+          <ChevronLeft size={20} />
+        </Link>
+        <h2 className="text-2xl font-semibold text-[#80BDCA]">Add Company</h2>
+      </div>
+
+      <Card className="bg-neutral-800 border border-neutral-700 shadow-sm">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Company Name</label>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Company Name</label>
             <input
               type="text"
               name="name"
@@ -42,39 +51,39 @@ export default function NewCompanyPage() {
               onChange={handleChange}
               required
               placeholder="Enter company name"
-              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] focus:border-transparent"
             />
           </div>
 
           {/* Industry & Website */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Industry</label>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Industry</label>
               <input
                 type="text"
                 name="industry"
                 value={form.industry}
                 onChange={handleChange}
                 placeholder="Enter industry"
-                className="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Website</label>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Website</label>
               <input
                 type="url"
                 name="website"
                 value={form.website}
                 onChange={handleChange}
                 placeholder="Enter company website"
-                className="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] focus:border-transparent"
               />
             </div>
           </div>
 
           {/* Contact Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Contact Email</label>
             <input
               type="email"
               name="contactEmail"
@@ -82,28 +91,34 @@ export default function NewCompanyPage() {
               onChange={handleChange}
               required
               placeholder="Enter contact email"
-              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] focus:border-transparent"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Notes</label>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Notes</label>
             <textarea
               name="notes"
               value={form.notes}
               onChange={handleChange}
               rows={4}
               placeholder="Enter any notes about the company"
-              className="mt-1 block w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] focus:border-transparent"
             />
           </div>
 
-          {/* Submit */}
-          <div className="pt-4">
+          {/* Action buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <Link
+              href="/companies"
+              className="px-4 py-2 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700 transition"
+            >
+              Cancel
+            </Link>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="px-6 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
             >
               Save Company
             </button>

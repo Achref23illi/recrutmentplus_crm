@@ -10,10 +10,12 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-white shadow-sm border border-gray-200",
-        elevated: "bg-white shadow-md border-none",
+        default: "bg-neutral-800 border border-neutral-700 shadow-sm",
+        elevated: "bg-neutral-800 shadow-md border-none",
         ghost: "bg-transparent border-none shadow-none",
-        outline: "bg-white border border-gray-200 shadow-none"
+        outline: "bg-neutral-800 border border-neutral-700 shadow-none",
+        primary: "bg-neutral-800 border-l-4 border-l-[#1D4E5F] border-t border-r border-b border-neutral-700 shadow-sm",
+        secondary: "bg-neutral-800 border-l-4 border-l-[#37A794] border-t border-r border-b border-neutral-700 shadow-sm"
       },
       padding: {
         none: "",
@@ -21,11 +23,16 @@ const cardVariants = cva(
         default: "p-4",
         md: "p-5",
         lg: "p-6",
+      },
+      hover: {
+        true: "transition-shadow duration-200 hover:shadow-lg hover:shadow-black/30",
+        false: ""
       }
     },
     defaultVariants: {
       variant: "default",
-      padding: "default"
+      padding: "default",
+      hover: false
     }
   }
 )
@@ -41,11 +48,12 @@ export function Card({
   className = '', 
   variant,
   padding,
+  hover,
   ...props 
 }: CardProps) {
   return (
     <div
-      className={cn(cardVariants({ variant, padding }), className)}
+      className={cn(cardVariants({ variant, padding, hover }), className)}
       {...props}
     >
       {children}

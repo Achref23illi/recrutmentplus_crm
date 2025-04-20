@@ -19,21 +19,25 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} font-sans`}>
-      <body className="flex h-screen bg-slate-50">
+      <body className="flex h-screen bg-[#121212] overflow-hidden">
         {/* Sidebar */}
         <Sidebar />
 
         {/* Main area */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Top header */}
-          <Header />
-
-          {/* Page content */}
-          <main className="flex-1 overflow-auto">
-            <div className="container mx-auto px-6 py-8 max-w-7xl">
-              {children}
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            {/* Header component */}
+            <div className="container mx-auto px-6 max-w-7xl">
+              <Header />
             </div>
-          </main>
+
+            {/* Page content - scrollable area */}
+            <div className="flex-1 overflow-auto">
+              <div className="container mx-auto px-6 py-6 max-w-7xl">
+                {children}
+              </div>
+            </div>
+          </div>
         </div>
       </body>
     </html>
