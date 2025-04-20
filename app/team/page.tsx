@@ -16,6 +16,7 @@ import {
   User
 } from 'lucide-react'
 import Link from 'next/link'
+import AddTeamMemberModal from './AddTeamMemberModal'
 
 interface TeamMember {
   id: string;
@@ -23,7 +24,7 @@ interface TeamMember {
   role: string;
   email: string;
   phone: string;
-  avatar: string;
+  avatar: string | null;
   tasksCompleted: number;
   activeRecruitments: number;
   successfulPlacements: number;
@@ -116,9 +117,11 @@ const roleColors = {
 export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(sampleTeam);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   // Filter team members based on search query and role filter
-  const filteredTeam = sampleTeam.filter(member => {
+  const filteredTeam = teamMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          member.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter = activeFilter === 'All' || member.role === activeFilter;
@@ -126,7 +129,15 @@ export default function TeamPage() {
   });
   
   // Get unique roles for the filter dropdown
-  const roles = ['All', ...Array.from(new Set(sampleTeam.map(m => m.role)))];
+  const roles = ['All', ...Array.from(new Set(teamMembers.map(m => m.role)))];
+  
+  // Handle adding a new team member
+  const handleAddTeamMember = (newTeamMember: TeamMember) => {
+    setTeamMembers(prev => [...prev, newTeamMember]);
+  };
+  
+  // Open modal to add team member
+  const openAddModal = () => setIsAddModalOpen(true);
   
   return (
     <div className="space-y-8">
@@ -162,12 +173,12 @@ export default function TeamPage() {
             <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" size={16} />
           </div>
           
-          <Link
-            href="/team/new"
+          <button
+            onClick={openAddModal}
             className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
           >
             <Plus className="mr-2" size={18} /> Add Team Member
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -180,7 +191,7 @@ export default function TeamPage() {
             </div>
             <h3 className="text-sm font-medium text-neutral-300">Total Members</h3>
           </div>
-          <p className="text-3xl font-bold text-white">{sampleTeam.length}</p>
+          <p className="text-3xl font-bold text-white">{teamMembers.length}</p>
         </Card>
         
         <Card className="bg-neutral-800 border border-neutral-700 p-5">
@@ -190,7 +201,7 @@ export default function TeamPage() {
             </div>
             <h3 className="text-sm font-medium text-neutral-300">Tasks Completed</h3>
           </div>
-          <p className="text-3xl font-bold text-white">{sampleTeam.reduce((sum, member) => sum + member.tasksCompleted, 0)}</p>
+          <p className="text-3xl font-bold text-white">{teamMembers.reduce((sum, member) => sum + member.tasksCompleted, 0)}</p>
         </Card>
         
         <Card className="bg-neutral-800 border border-neutral-700 p-5">
@@ -200,7 +211,7 @@ export default function TeamPage() {
             </div>
             <h3 className="text-sm font-medium text-neutral-300">Active Recruitments</h3>
           </div>
-          <p className="text-3xl font-bold text-white">{sampleTeam.reduce((sum, member) => sum + member.activeRecruitments, 0)}</p>
+          <p className="text-3xl font-bold text-white">{teamMembers.reduce((sum, member) => sum + member.activeRecruitments, 0)}</p>
         </Card>
         
         <Card className="bg-neutral-800 border border-neutral-700 p-5">
@@ -210,7 +221,7 @@ export default function TeamPage() {
             </div>
             <h3 className="text-sm font-medium text-neutral-300">Successful Placements</h3>
           </div>
-          <p className="text-3xl font-bold text-white">{sampleTeam.reduce((sum, member) => sum + member.successfulPlacements, 0)}</p>
+          <p className="text-3xl font-bold text-white">{teamMembers.reduce((sum, member) => sum + member.successfulPlacements, 0)}</p>
         </Card>
       </div>
 
@@ -292,8 +303,8 @@ export default function TeamPage() {
         )}
         
         {/* Add new team member card */}
-        <Link 
-          href="/team/new"
+        <button
+          onClick={openAddModal}
           className="group border-2 border-dashed border-neutral-700 rounded-lg flex items-center justify-center h-full min-h-64 hover:border-[#1D4E5F] transition-colors"
         >
           <div className="flex flex-col items-center space-y-2 text-center p-4">
@@ -303,8 +314,15 @@ export default function TeamPage() {
             <p className="text-neutral-400 group-hover:text-[#80BDCA] font-medium transition-colors">Add Team Member</p>
             <p className="text-neutral-500 text-sm">Invite a new team member to the platform</p>
           </div>
-        </Link>
+        </button>
       </div>
+      
+      {/* Add Team Member Modal */}
+      <AddTeamMemberModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleAddTeamMember}
+      />
     </div>
   )
 }

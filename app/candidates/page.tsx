@@ -1,5 +1,7 @@
 // app/candidates/page.tsx
-import Link from 'next/link'
+'use client'
+
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { 
   Plus, 
@@ -10,6 +12,7 @@ import {
   ChevronLeft, 
   ChevronRight
 } from 'lucide-react'
+import { AddCandidateModal } from '../candidates/AddCandidateModal'
 
 interface Candidate {
   id: string
@@ -30,6 +33,23 @@ const sampleCandidates: Candidate[] = [
 ]
 
 export default function CandidatesPage() {
+  const [candidates, setCandidates] = useState<Candidate[]>(sampleCandidates)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+
+  const handleAddCandidate = (candidateData: { name: string; stage: string; status: string }) => {
+    // In a real app, you would make an API call here
+    // This is just for demonstration
+    const newCandidate: Candidate = {
+      id: (candidates.length + 1).toString(),
+      name: candidateData.name,
+      stage: candidateData.stage,
+      status: candidateData.status,
+      appliedDate: new Date().toISOString().split('T')[0]
+    }
+    
+    setCandidates([newCandidate, ...candidates])
+  }
+
   return (
     <div className="space-y-8">
       {/* Page Title and Actions */}
@@ -52,12 +72,12 @@ export default function CandidatesPage() {
           <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
             <Download size={18} className="mr-2" /> Export
           </button>
-          <Link
-            href="/candidates/new"
+          <button
+            onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
           >
             <Plus className="mr-2" size={18} /> Add Candidate
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -75,7 +95,7 @@ export default function CandidatesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-700">
-              {sampleCandidates.map(c => (
+              {candidates.map(c => (
                 <tr key={c.id} className="hover:bg-neutral-700/20">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
@@ -140,6 +160,13 @@ export default function CandidatesPage() {
           </div>
         </div>
       </Card>
+
+      {/* Add Candidate Modal */}
+      <AddCandidateModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddCandidate}
+      />
     </div>
   )
 }

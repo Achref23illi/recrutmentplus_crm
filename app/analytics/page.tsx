@@ -1,7 +1,7 @@
 // app/analytics/page.tsx
 'use client'
 
-//import { useState } from 'react'
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { 
   BarChart3, 
@@ -13,10 +13,12 @@ import {
   Users,
   CheckCircle2,
   XCircle,
-  Filter,
+  //Filter,
   Download,
   Calendar
 } from 'lucide-react'
+import { DateRangePickerModal } from './DateRangePickerModal'
+import { FilterDropdown } from './FilterDropdown'
 
 // Sample data for charts
 const topPositionsData = [
@@ -45,7 +47,42 @@ const monthlyTrendsData = [
 ];
 
 export default function AnalyticsPage() {
-  //const [timeRange, setTimeRange] = useState('Last 30 days');
+  const [timeRange, setTimeRange] = useState('last-30-days')
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const [customDateRange, setCustomDateRange] = useState<{ start: Date; end: Date } | null>(null)
+  //const [appliedFilters, setAppliedFilters] = useState<string[]>([])
+  
+  // Date formatting for display
+  const formatDateForDisplay = (date: Date): string => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+  
+  // Get display text for the current time range selection
+  const getTimeRangeDisplayText = (): string => {
+    if (timeRange === 'custom' && customDateRange) {
+      return `${formatDateForDisplay(customDateRange.start)} - ${formatDateForDisplay(customDateRange.end)}`
+    }
+    
+    switch (timeRange) {
+      case 'last-30-days': return 'Last 30 days'
+      case 'last-quarter': return 'Last quarter'
+      case 'year-to-date': return 'Year to date'
+      default: return 'Last 30 days'
+    }
+  }
+  
+  // Handle date range selection
+  const handleDateRangeSelect = (startDate: Date, endDate: Date) => {
+    setCustomDateRange({ start: startDate, end: endDate })
+    setTimeRange('custom')
+  }
+  
+  // Handle filter changes
+  const handleFilterChange = (selectedFilters: string[]) => {
+    //setAppliedFilters(selectedFilters)
+    // In a real application, you would refresh the data based on filters here
+    console.log('Filters applied:', selectedFilters)
+  }
   
   return (
     <div className="space-y-8">
@@ -56,27 +93,58 @@ export default function AnalyticsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative inline-flex items-center p-1 bg-neutral-800 border border-neutral-700 rounded-lg text-sm">
-            <button className="px-3 py-1.5 bg-[#1D4E5F] text-white rounded-md">
+            <button 
+              onClick={() => setTimeRange('last-30-days')}
+              className={`px-3 py-1.5 rounded-md ${
+                timeRange === 'last-30-days' ? 'bg-[#1D4E5F] text-white' : 'text-neutral-300 hover:bg-neutral-700'
+              }`}
+            >
               Last 30 days
             </button>
-            <button className="px-3 py-1.5 text-neutral-300 hover:bg-neutral-700 rounded-md">
+            <button 
+              onClick={() => setTimeRange('last-quarter')}
+              className={`px-3 py-1.5 rounded-md ${
+                timeRange === 'last-quarter' ? 'bg-[#1D4E5F] text-white' : 'text-neutral-300 hover:bg-neutral-700'
+              }`}
+            >
               Last quarter
             </button>
-            <button className="px-3 py-1.5 text-neutral-300 hover:bg-neutral-700 rounded-md">
+            <button 
+              onClick={() => setTimeRange('year-to-date')}
+              className={`px-3 py-1.5 rounded-md ${
+                timeRange === 'year-to-date' ? 'bg-[#1D4E5F] text-white' : 'text-neutral-300 hover:bg-neutral-700'
+              }`}
+            >
               Year to date
             </button>
+            {timeRange === 'custom' && (
+              <button className="px-3 py-1.5 bg-[#1D4E5F] text-white rounded-md">
+                Custom
+              </button>
+            )}
           </div>
           
           <div className="relative">
-            <div className="flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-neutral-300 hover:bg-neutral-700">
+            <button
+              onClick={() => setIsDatePickerOpen(true)}
+              className={`flex items-center px-3 py-2 border rounded-lg transition-colors ${
+                timeRange === 'custom' 
+                  ? 'bg-[#1D4E5F]/20 border-[#1D4E5F]/40 text-[#80BDCA]' 
+                  : 'bg-neutral-800 border-neutral-700 text-neutral-300 hover:bg-neutral-700'
+              }`}
+              title="Select custom date range"
+            >
               <Calendar size={16} className="mr-2" />
-              <span className="text-sm">Custom Range</span>
-            </div>
+              <span className="text-sm">
+                {timeRange === 'custom' && customDateRange 
+                  ? `${formatDateForDisplay(customDateRange.start)} - ${formatDateForDisplay(customDateRange.end)}`
+                  : 'Custom Range'
+                }
+              </span>
+            </button>
           </div>
           
-          <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
-            <Filter size={16} className="mr-2" /> Filter
-          </button>
+          <FilterDropdown onFilterChange={handleFilterChange} />
           
           <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
             <Download size={16} className="mr-2" /> Export
@@ -229,6 +297,9 @@ export default function AnalyticsPage() {
           <h3 className="font-semibold text-[#80BDCA] text-lg flex items-center">
             <LineChart size={20} className="mr-2" /> Monthly Trends
           </h3>
+          <div className="text-sm text-neutral-400">
+            {getTimeRangeDisplayText()}
+          </div>
         </div>
         
         <div className="h-80">
@@ -328,6 +399,13 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </Card>
+
+      {/* Date Range Picker Modal */}
+      <DateRangePickerModal
+        isOpen={isDatePickerOpen}
+        onClose={() => setIsDatePickerOpen(false)}
+        onApply={handleDateRangeSelect}
+      />
     </div>
   )
 }

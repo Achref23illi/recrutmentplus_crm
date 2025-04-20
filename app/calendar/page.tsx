@@ -13,6 +13,7 @@ import {
   Filter,
   MoreHorizontal
 } from 'lucide-react'
+import { AddEventModal } from './AddEventModal'
 
 // Sample calendar data
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -22,7 +23,7 @@ const MONTHS = [
 ];
 
 // Sample events data
-const EVENTS = [
+const initialEvents = [
   { id: 1, title: 'Interview with Emma Thompson', type: 'interview', date: '2025-04-20', time: '10:00 AM', duration: 60 },
   { id: 2, title: 'Client Meeting - TechCorp', type: 'meeting', date: '2025-04-20', time: '2:30 PM', duration: 45 },
   { id: 3, title: 'Screening Call - UI/UX Designer', type: 'screening', date: '2025-04-21', time: '9:15 AM', duration: 30 },
@@ -34,6 +35,8 @@ const EVENTS = [
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 3, 20)); // April 20, 2025
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+  const [events, setEvents] = useState(initialEvents);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   // Generate days for the current month view
   const generateCalendarDays = () => {
@@ -72,7 +75,7 @@ export default function CalendarPage() {
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
       const dateString = date.toISOString().split('T')[0];
-      const hasEvents = EVENTS.some(event => event.date === dateString);
+      const hasEvents = events.some(event => event.date === dateString);
       
       days.push({
         date,
@@ -109,6 +112,37 @@ export default function CalendarPage() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
   
+  const handleAddEvent = (eventData: { 
+    title: string; 
+    type: string; 
+    date: string; 
+    startTime: string;
+    duration: number;
+    description: string;
+    attendees: string;
+    location: string;
+  }) => {
+    // Format the time to match the existing format
+    const hour = parseInt(eventData.startTime.split(':')[0]);
+    const minute = parseInt(eventData.startTime.split(':')[1]);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+    const formattedTime = `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`;
+    
+    // Create new event
+    const newEvent = {
+      id: events.length + 1,
+      title: eventData.title,
+      type: eventData.type,
+      date: eventData.date,
+      time: formattedTime,
+      duration: eventData.duration
+    };
+    
+    // Add event to state
+    setEvents([...events, newEvent]);
+  };
+  
   return (
     <div className="space-y-8">
       {/* Page Title and Actions */}
@@ -143,7 +177,10 @@ export default function CalendarPage() {
             <Filter size={16} className="mr-2" /> Filter
           </button>
           
-          <button className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition">
+          <button
+            onClick={() => setIsAddModalOpen(true)} 
+            className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
+          >
             <Plus className="mr-2" size={16} /> New Event
           </button>
         </div>
@@ -198,7 +235,7 @@ export default function CalendarPage() {
               {/* Event indicators */}
               {day.hasEvents && day.isCurrentMonth && (
                 <div className="mt-2 space-y-1">
-                  {EVENTS
+                  {events
                     .filter(event => event.date === day.date.toISOString().split('T')[0])
                     .slice(0, 2)
                     .map(event => (
@@ -217,9 +254,9 @@ export default function CalendarPage() {
                     ))
                   }
                   
-                  {EVENTS.filter(event => event.date === day.date.toISOString().split('T')[0]).length > 2 && (
+                  {events.filter(event => event.date === day.date.toISOString().split('T')[0]).length > 2 && (
                     <div className="text-xs text-neutral-400 pl-1">
-                      +{EVENTS.filter(event => event.date === day.date.toISOString().split('T')[0]).length - 2} more
+                      +{events.filter(event => event.date === day.date.toISOString().split('T')[0]).length - 2} more
                     </div>
                   )}
                 </div>
@@ -237,7 +274,7 @@ export default function CalendarPage() {
         </div>
         
         <div className="space-y-3">
-          {EVENTS
+          {events
             .filter(event => event.date === '2025-04-20')
             .map(event => (
               <div key={event.id} className="flex p-3 bg-neutral-700/30 rounded-lg border border-neutral-700 hover:border-[#1D4E5F]/40 transition-colors">
@@ -266,6 +303,13 @@ export default function CalendarPage() {
           }
         </div>
       </Card>
+
+      {/* Add Event Modal */}
+      <AddEventModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddEvent}
+      />
     </div>
   )
 }

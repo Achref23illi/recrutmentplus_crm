@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Plus, Info, ExternalLink, Mail, Clock, UserCheck, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
+import CreateWorkflowModal from './CreateWorkflowModal'
 
 interface Workflow {
   id: string
@@ -75,6 +76,7 @@ const initialWorkflows: Workflow[] = [
 
 export default function AutomationPage() {
   const [workflows, setWorkflows] = useState(initialWorkflows)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   const toggle = (id: string) => {
     setWorkflows(wfs =>
@@ -99,6 +101,10 @@ export default function AutomationPage() {
     }
   };
 
+  const handleSaveWorkflow = (newWorkflow: Workflow) => {
+    setWorkflows(prevWorkflows => [newWorkflow, ...prevWorkflows]);
+  }
+
   return (
     <div className="space-y-8">
       {/* Page Title and Actions */}
@@ -113,12 +119,12 @@ export default function AutomationPage() {
           >
             <Info size={18} className="mr-2" /> Activity Logs
           </Link>
-          <Link
-            href="/automation/new"
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
             className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
           >
             <Plus className="mr-2" size={18} /> Create Workflow
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -191,10 +197,11 @@ export default function AutomationPage() {
           </Card>
         ))}
         
-        {/* Add New Workflow Card */}
-        <Link 
-          href="/automation/new"
+        {/* Add New Workflow Card - Updated to use modal instead of navigation */}
+        <button 
+          onClick={() => setIsCreateModalOpen(true)}
           className="group border-2 border-dashed border-neutral-700 rounded-lg flex items-center justify-center h-64 hover:border-[#1D4E5F] transition-colors"
+          aria-label="Create new workflow"
         >
           <div className="flex flex-col items-center space-y-2 text-center p-4">
             <div className="h-12 w-12 rounded-full bg-neutral-700/50 group-hover:bg-[#1D4E5F]/20 flex items-center justify-center transition-colors">
@@ -203,8 +210,15 @@ export default function AutomationPage() {
             <p className="text-neutral-400 group-hover:text-[#80BDCA] font-medium transition-colors">Create New Workflow</p>
             <p className="text-neutral-500 text-sm">Automate repetitive tasks and notifications</p>
           </div>
-        </Link>
+        </button>
       </div>
+
+      {/* Create Workflow Modal */}
+      <CreateWorkflowModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onSave={handleSaveWorkflow} 
+      />
     </div>
   )
 }

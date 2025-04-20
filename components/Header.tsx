@@ -1,15 +1,36 @@
 // components/Header.tsx
 'use client'
 
-import { useState } from 'react'
-import { Bell, Search, Menu, X, User, LogOut, Settings } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Bell, Search, Menu, X, User, LogOut, Settings, Calendar, Mail, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 export default function Header() {
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const pathname = usePathname()
+  
+  const userMenuRef = useRef<HTMLDivElement>(null)
+  const notificationMenuRef = useRef<HTMLDivElement>(null)
+  
+  // Close menus when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   
   // Get current page title from pathname
   const getPageTitle = () => {
@@ -17,6 +38,31 @@ export default function Header() {
     if (!path) return 'Dashboard'
     return path.charAt(0).toUpperCase() + path.slice(1)
   }
+
+  // Sample notifications data
+  const notifications = [
+    {
+      id: '1',
+      title: 'Interview Scheduled',
+      message: 'Emma Thompson interview set for tomorrow at 10:00 AM',
+      time: '10 min ago',
+      type: 'calendar'
+    },
+    {
+      id: '2',
+      title: 'New Application',
+      message: 'David Kim applied for Senior Developer position',
+      time: '2 hours ago',
+      type: 'application'
+    },
+    {
+      id: '3',
+      title: 'Task Completed',
+      message: 'Sarah updated candidate profile review task',
+      time: '1 day ago',
+      type: 'task'
+    }
+  ]
 
   return (
     <header className="bg-transparent py-5 border-b border-neutral-700/50 sticky top-0 z-30">
@@ -55,18 +101,73 @@ export default function Header() {
           </button>
           
           {/* Notifications */}
-          <div className="relative">
-            <button className="relative p-1.5 rounded-full hover:bg-neutral-800 transition-colors">
-              <Bell size={20} className="text-neutral-400" />
+          <div className="relative" ref={notificationMenuRef}>
+            <button 
+              className="relative p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setShowUserMenu(false);
+              }}
+            >
+              <Bell size={20} className={`${showNotifications ? 'text-[#80BDCA]' : 'text-neutral-400'}`} />
               {/* Notification badge */}
               <span className="absolute top-0 right-0 h-4 w-4 bg-[#37A794] rounded-full text-[10px] font-medium flex items-center justify-center text-white">3</span>
             </button>
+            
+            {/* Notification dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-neutral-800 rounded-lg shadow-lg border border-neutral-700 overflow-hidden z-50">
+                <div className="px-4 py-3 bg-neutral-800 border-b border-neutral-700 flex justify-between items-center">
+                  <h3 className="font-medium text-white">Notifications</h3>
+                  <Link href="/notifications" className="text-xs text-[#80BDCA] hover:text-[#51B3A2]">
+                    View All
+                  </Link>
+                </div>
+                
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.map(notification => (
+                    <div 
+                      key={notification.id}
+                      className="px-4 py-3 border-b border-neutral-700 hover:bg-neutral-700/30 transition-colors"
+                    >
+                      <div className="flex">
+                        <div className="mr-3">
+                          <div className={`h-8 w-8 rounded-full flex items-center justify-center 
+                            ${notification.type === 'calendar' ? 'bg-blue-900/30 text-blue-300' : 
+                              notification.type === 'application' ? 'bg-[#1D4E5F]/30 text-[#80BDCA]' : 
+                              'bg-green-900/30 text-green-300'}`}
+                          >
+                            {notification.type === 'calendar' ? <Calendar size={16} /> : 
+                             notification.type === 'application' ? <Mail size={16} /> : 
+                             <CheckCircle2 size={16} />}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{notification.title}</p>
+                          <p className="text-xs text-neutral-400 mt-0.5">{notification.message}</p>
+                          <p className="text-xs text-neutral-500 mt-1">{notification.time}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="px-4 py-2 bg-neutral-800 border-t border-neutral-700">
+                  <button className="w-full py-2 text-center text-sm text-[#80BDCA] hover:text-[#51B3A2] transition-colors">
+                    Mark all as read
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* User avatar - dropdown trigger */}
-          <div className="relative">
+          <div className="relative" ref={userMenuRef}>
             <button 
-              onClick={() => setShowUserMenu(!showUserMenu)} 
+              onClick={() => {
+                setShowUserMenu(!showUserMenu);
+                setShowNotifications(false);
+              }} 
               className="flex items-center space-x-2 focus:outline-none"
             >
               <div className="h-8 w-8 rounded-full bg-[#1D4E5F] text-white flex items-center justify-center text-sm font-medium relative ring-2 ring-neutral-700">

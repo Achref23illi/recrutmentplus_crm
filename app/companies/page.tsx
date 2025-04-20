@@ -1,5 +1,7 @@
 // app/companies/page.tsx
-import Link from 'next/link'
+'use client'
+
+import { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { 
   Plus, 
@@ -12,6 +14,7 @@ import {
   Building,
   Briefcase
 } from 'lucide-react'
+import { AddCompanyModal } from './AddCompanyModal'
 
 interface Company {
   id: string
@@ -32,6 +35,34 @@ const sampleCompanies: Company[] = [
 ]
 
 export default function CompaniesPage() {
+  const [companies, setCompanies] = useState<Company[]>(sampleCompanies)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+
+  const handleAddCompany = (companyData: { 
+    name: string; 
+    website: string; 
+    industry: string; 
+    employeeCount: string; 
+    status: string; 
+    location: string;
+    contactName: string;
+    contactEmail: string;
+    contactPhone: string;
+    notes: string;
+  }) => {
+    // In a real app, you would make an API call here
+    // This is just for demonstration
+    const newCompany: Company = {
+      id: (companies.length + 1).toString(),
+      name: companyData.name,
+      industry: companyData.industry,
+      openPositions: 0, // Default value
+      contact: companyData.contactEmail || 'No contact available',
+    }
+    
+    setCompanies([newCompany, ...companies])
+  }
+
   return (
     <div className="space-y-8">
       {/* Page Title and Actions */}
@@ -54,12 +85,12 @@ export default function CompaniesPage() {
           <button className="inline-flex items-center px-3 py-2 bg-neutral-800 border border-neutral-700 text-neutral-300 rounded-lg hover:bg-neutral-700">
             <Download size={18} className="mr-2" /> Export
           </button>
-          <Link
-            href="/companies/new"
+          <button
+            onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center px-4 py-2 bg-[#1D4E5F] text-white rounded-lg hover:bg-[#123040] transition"
           >
             <Plus className="mr-2" size={18} /> Add Company
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -77,7 +108,7 @@ export default function CompaniesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-700">
-              {sampleCompanies.map(company => (
+              {companies.map(company => (
                 <tr key={company.id} className="hover:bg-neutral-700/20">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
@@ -131,6 +162,13 @@ export default function CompaniesPage() {
           </div>
         </div>
       </Card>
+
+      {/* Add Company Modal */}
+      <AddCompanyModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={handleAddCompany}
+      />
     </div>
   )
 }
