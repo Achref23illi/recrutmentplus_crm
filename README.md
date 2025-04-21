@@ -33,7 +33,7 @@ RecruitmentPlus CRM is a full-featured recruitment management platform that help
 
 1. Clone the repository
 ```bash
-git clone [repository-url]
+git clone git@github.com:Achref23illi/recrutmentplus_crm.git
 cd recrutmentplus_crm
 ```
 
