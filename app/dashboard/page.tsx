@@ -15,7 +15,7 @@ import {
   Folders
 } from 'lucide-react';
 import Link from 'next/link';
-import { motion, Variants, MotionValue, useMotionValue, useTransform, useInView } from 'framer-motion';
+import { motion, Variants, useMotionValue, useTransform, useInView } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 
 // Define reusable animation variants
@@ -132,7 +132,9 @@ function KpiCard({
   );
 }
 
-// Animated Progress Bar Component
+// If you don't need this component, you can remove it entirely
+// If you want to keep it for future use, you can add this comment to suppress the warning
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function AnimatedProgressBar({ 
   progress, 
   color = "[#37A794]", 
@@ -175,12 +177,10 @@ export default function DashboardPage() {
   // Refs for scroll animation triggers
   const pipelineRef = useRef(null);
   const activitiesRef = useRef(null);
-  const projectsRef = useRef(null);
   
   // Track if sections are in view
   const isPipelineInView = useInView(pipelineRef, { once: true, amount: 0.3 });
   const isActivitiesInView = useInView(activitiesRef, { once: true, amount: 0.3 });
-  const isProjectsInView = useInView(projectsRef, { once: true, amount: 0.3 });
 
   // Mock data for pipeline stages
   const pipelineStages = [
