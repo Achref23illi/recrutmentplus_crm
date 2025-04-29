@@ -1,7 +1,7 @@
 // app/companies/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { 
   Plus, 
@@ -11,7 +11,14 @@ import {
   ChevronLeft, 
   ChevronRight,
   Building,
-  Briefcase
+  Briefcase,
+  Edit,
+  Mail,
+  Phone,
+  FileText,
+  Globe,
+  Trash2,
+  Users
 } from 'lucide-react'
 import { AddCompanyModal } from './AddCompanyModal'
 import { FilterDropdown } from './FilterDropdown'
@@ -46,6 +53,57 @@ const industryIdToValue: Record<string, string> = {
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>(sampleCompanies)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (activeDropdown !== null && 
+          dropdownRefs.current[activeDropdown] && 
+          !dropdownRefs.current[activeDropdown]?.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDropdown]);
+
+  const toggleDropdown = (companyId: string) => {
+    setActiveDropdown(activeDropdown === companyId ? null : companyId);
+  };
+
+  // Handle company actions
+  const handleCompanyAction = (action: string, companyId: string, companyName: string) => {
+    // In a real app, these would perform actual actions
+    switch(action) {
+      case 'email':
+        console.log(`Sending email to ${companyName}`);
+        break;
+      case 'call':
+        console.log(`Calling ${companyName}`);
+        break;
+      case 'edit':
+        console.log(`Editing ${companyName}`);
+        break;
+      case 'positions':
+        console.log(`Managing positions for ${companyName}`);
+        break;
+      case 'view-note':
+        console.log(`Viewing notes for ${companyName}`);
+        break;
+      case 'website':
+        console.log(`Opening website for ${companyName}`);
+        break;
+      case 'delete':
+        console.log(`Deleting ${companyName}`);
+        break;
+    }
+    setActiveDropdown(null);
+  };
 
   const handleAddCompany = (companyData: { 
     name: string; 
@@ -178,10 +236,90 @@ export default function CompaniesPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-400">{company.contact}</td>
-                  <td className="px-6 py-4">
-                    <button type="button" className="p-2 hover:bg-neutral-700 rounded" title="More actions">
+                  <td className="px-6 py-4 relative">
+                    <button 
+                      type="button" 
+                      className="p-2 hover:bg-neutral-700 rounded" 
+                      title="More actions"
+                      onClick={() => toggleDropdown(company.id)}
+                    >
                       <MoreHorizontal size={18} className="text-neutral-400" />
                     </button>
+                    
+                    {/* Action Dropdown Menu */}
+                    {activeDropdown === company.id && (
+                      <div 
+                        ref={(el) => {
+                          dropdownRefs.current[company.id] = el;
+                        }}
+                        className="absolute right-4 z-10 mt-2 w-56 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                      >
+                        <div className="py-1 divide-y divide-neutral-700">
+                          {/* Communication */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-medium text-neutral-400 mb-1">Communication</p>
+                            <button 
+                              onClick={() => handleCompanyAction('email', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Mail size={16} className="mr-2 text-[#80BDCA]" />
+                              Send Email
+                            </button>
+                            <button 
+                              onClick={() => handleCompanyAction('call', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Phone size={16} className="mr-2 text-[#80BDCA]" />
+                              Call Company
+                            </button>
+                          </div>
+                          
+                          {/* Management */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-medium text-neutral-400 mb-1">Management</p>
+                            <button 
+                              onClick={() => handleCompanyAction('edit', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Edit size={16} className="mr-2 text-neutral-400" />
+                              Edit Company
+                            </button>
+                            <button 
+                              onClick={() => handleCompanyAction('positions', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Users size={16} className="mr-2 text-neutral-400" />
+                              Manage Positions
+                            </button>
+                            <button 
+                              onClick={() => handleCompanyAction('view-note', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <FileText size={16} className="mr-2 text-neutral-400" />
+                              View Notes
+                            </button>
+                            <button 
+                              onClick={() => handleCompanyAction('website', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Globe size={16} className="mr-2 text-neutral-400" />
+                              Visit Website
+                            </button>
+                          </div>
+                          
+                          {/* Danger Zone */}
+                          <div className="px-3 py-2">
+                            <button 
+                              onClick={() => handleCompanyAction('delete', company.id, company.name)}
+                              className="w-full text-left px-4 py-2 text-sm text-red-400 flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Trash2 size={16} className="mr-2" />
+                              Delete Company
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

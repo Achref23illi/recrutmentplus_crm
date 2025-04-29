@@ -118,3 +118,43 @@ body {
     @apply bg-neutral-50 rounded-lg border border-neutral-200;
   }
 }
+
+/* Adding to the existing global CSS */
+
+/* Progress bar animation */
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: var(--progress-width, 100%); }
+}
+
+/* Add hover effects for interactive elements */
+button:not([disabled]), 
+a.button,
+.clickable {
+  @apply transition-all duration-200;
+}
+
+/* Icon hover animations */
+.icon-hover {
+  @apply transition-transform duration-200;
+}
+
+.icon-hover:hover {
+  @apply scale-110;
+}
+
+/* Table row hover effect */
+.table-row-hover {
+  @apply transition-colors duration-200;
+}
+
+/* Animate list items */
+.list-animate > *:not(.no-animate) {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* Data indicators with hover effects */
+.data-indicator {
+  @apply transition-all duration-200 hover:scale-110;
+}

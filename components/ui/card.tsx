@@ -4,6 +4,7 @@
 import React, { HTMLAttributes, ReactNode } from 'react'
 import { VariantProps, cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import { animations } from '@/lib/animations'
 
 const cardVariants = cva(
   "rounded-lg overflow-hidden",
@@ -25,14 +26,26 @@ const cardVariants = cva(
         lg: "p-6",
       },
       hover: {
-        true: "transition-shadow duration-200 hover:shadow-lg hover:shadow-black/30",
+        true: animations.cardHover,
+        scale: `${animations.cardHover} ${animations.hoverScale}`,
+        subtle: "transition-all duration-200 hover:border-[#1D4E5F]/50",
+        glow: "transition-all duration-200 hover:shadow-lg hover:shadow-[#1D4E5F]/30",
         false: ""
+      },
+      animate: {
+        fadeIn: animations.fadeIn,
+        fadeUp: animations.fadeInUp,
+        fadeDown: animations.fadeInDown,
+        slideLeft: animations.slideInLeft,
+        slideRight: animations.slideInRight,
+        none: "",
       }
     },
     defaultVariants: {
       variant: "default",
       padding: "default",
-      hover: false
+      hover: false,
+      animate: "none"
     }
   }
 )
@@ -49,11 +62,12 @@ export function Card({
   variant,
   padding,
   hover,
+  animate,
   ...props 
 }: CardProps) {
   return (
     <div
-      className={cn(cardVariants({ variant, padding, hover }), className)}
+      className={cn(cardVariants({ variant, padding, hover, animate }), className)}
       {...props}
     >
       {children}

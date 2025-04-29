@@ -1,15 +1,22 @@
 // app/candidates/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { 
   Plus, 
   MoreHorizontal, 
   Search, 
-  //Download, 
   ChevronLeft, 
-  ChevronRight
+  ChevronRight,
+  ChevronRight as ArrowRight,
+  Edit,
+  Mail,
+  //Phone,
+  Calendar,
+  Trash2,
+  //CheckCircle2,
+  //X
 } from 'lucide-react'
 import { AddCandidateModal } from '../candidates/AddCandidateModal'
 import { FilterDropdown } from './FilterDropdown'
@@ -49,6 +56,61 @@ const statusIdToValue: Record<string, string> = {
 export default function CandidatesPage() {
   const [candidates, setCandidates] = useState<Candidate[]>(sampleCandidates)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (activeDropdown !== null && 
+          dropdownRefs.current[activeDropdown] && 
+          !dropdownRefs.current[activeDropdown]?.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDropdown]);
+
+  const toggleDropdown = (candidateId: string) => {
+    setActiveDropdown(activeDropdown === candidateId ? null : candidateId);
+  };
+
+  // Get the next stage for a candidate
+  const getNextStage = (currentStage: string): string => {
+    const stages = ['Received', 'Interview Scheduled', 'Interview Completed', 'Client Waiting', 'Offer Extended', 'Hired'];
+    const currentIndex = stages.indexOf(currentStage);
+    return currentIndex < stages.length - 1 ? stages[currentIndex + 1] : currentStage;
+  };
+
+  // Advance candidate to next stage
+  const advanceToNextStage = (candidateId: string) => {
+    setCandidates(candidates.map(candidate => 
+      candidate.id === candidateId 
+        ? { ...candidate, stage: getNextStage(candidate.stage) } 
+        : candidate
+    ));
+    setActiveDropdown(null);
+  };
+
+  // Update candidate status
+  const updateCandidateStatus = (candidateId: string, newStatus: string) => {
+    setCandidates(candidates.map(candidate => 
+      candidate.id === candidateId 
+        ? { ...candidate, status: newStatus } 
+        : candidate
+    ));
+    setActiveDropdown(null);
+  };
+
+  // Handle candidate action (placeholder for future functionality)
+  const handleCandidateAction = (action: string, candidateId: string) => {
+    console.log(`Action: ${action} for candidate ${candidateId}`);
+    setActiveDropdown(null);
+  };
 
   const handleAddCandidate = (candidateData: { name: string; stage: string; status: string }) => {
     // In a real app, you would make an API call here
@@ -161,6 +223,8 @@ export default function CandidatesPage() {
                       ${c.stage === 'Interview Scheduled' ? 'bg-yellow-900/30 text-yellow-300' : ''}
                       ${c.stage === 'Interview Completed' ? 'bg-purple-900/30 text-purple-300' : ''}
                       ${c.stage === 'Client Waiting' ? 'bg-orange-900/30 text-orange-300' : ''}
+                      ${c.stage === 'Offer Extended' ? 'bg-emerald-900/30 text-emerald-300' : ''}
+                      ${c.stage === 'Hired' ? 'bg-green-900/30 text-green-300' : ''}
                     `}>
                       {c.stage}
                     </span>
@@ -175,10 +239,99 @@ export default function CandidatesPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-neutral-400">{c.appliedDate}</td>
-                  <td className="px-6 py-4">
-                    <button type="button" className="p-2 hover:bg-neutral-700 rounded" title="More actions">
+                  <td className="px-6 py-4 relative">
+                    <button 
+                      type="button" 
+                      className="p-2 hover:bg-neutral-700 rounded" 
+                      title="More actions"
+                      onClick={() => toggleDropdown(c.id)}
+                    >
                       <MoreHorizontal size={18} className="text-neutral-400" />
                     </button>
+                    
+                    {/* Action Dropdown Menu */}
+                    {activeDropdown === c.id && (
+                      <div 
+                        ref={(el) => {
+                          dropdownRefs.current[c.id] = el;
+                        }}
+                        className="absolute right-4 z-10 mt-2 w-56 origin-top-right rounded-md bg-neutral-800 border border-neutral-700 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                      >
+                        <div className="py-1 divide-y divide-neutral-700">
+                          {/* Stage Advancement */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-medium text-neutral-400 mb-1">Stage</p>
+                            <button 
+                              onClick={() => advanceToNextStage(c.id)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                              disabled={c.stage === 'Hired'}
+                            >
+                              <ArrowRight size={16} className="mr-2 text-[#80BDCA]" />
+                              {c.stage === 'Hired' ? 'Completed Hire' : `Move to ${getNextStage(c.stage)}`}
+                            </button>
+                          </div>
+                          
+                          {/* Status Options */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-medium text-neutral-400 mb-1">Status</p>
+                            <button 
+                              onClick={() => updateCandidateStatus(c.id, 'New')}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <span className="h-2 w-2 rounded-full bg-[#80BDCA] mr-2"></span>
+                              New
+                            </button>
+                            <button 
+                              onClick={() => updateCandidateStatus(c.id, 'In Progress')}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <span className="h-2 w-2 rounded-full bg-[#51B3A2] mr-2"></span>
+                              In Progress
+                            </button>
+                            <button 
+                              onClick={() => updateCandidateStatus(c.id, 'Pending')}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <span className="h-2 w-2 rounded-full bg-amber-300 mr-2"></span>
+                              Pending
+                            </button>
+                          </div>
+                          
+                          {/* Quick Actions */}
+                          <div className="px-3 py-2">
+                            <p className="text-xs font-medium text-neutral-400 mb-1">Actions</p>
+                            <button 
+                              onClick={() => handleCandidateAction('edit', c.id)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Edit size={16} className="mr-2 text-neutral-400" />
+                              Edit Candidate
+                            </button>
+                            <button 
+                              onClick={() => handleCandidateAction('email', c.id)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Mail size={16} className="mr-2 text-neutral-400" />
+                              Send Email
+                            </button>
+                            <button 
+                              onClick={() => handleCandidateAction('schedule', c.id)}
+                              className="w-full text-left px-4 py-2 text-sm text-white flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Calendar size={16} className="mr-2 text-neutral-400" />
+                              Schedule Interview
+                            </button>
+                            <button 
+                              onClick={() => handleCandidateAction('delete', c.id)}
+                              className="w-full text-left px-4 py-2 text-sm text-red-400 flex items-center rounded-md hover:bg-neutral-700"
+                            >
+                              <Trash2 size={16} className="mr-2" />
+                              Delete Candidate
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
