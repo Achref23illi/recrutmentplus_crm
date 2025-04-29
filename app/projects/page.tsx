@@ -22,7 +22,7 @@ interface Project {
   status: 'In Progress' | 'Completed' | 'On Hold'
   dueDate: string
   progress: number
-  assignees: string[]
+  assignees: string[] 
   tasks: {
     total: number
     completed: number
@@ -302,15 +302,11 @@ export default function ProjectsPage() {
                           <div className="mt-2">
                             <div className="h-1.5 bg-neutral-700 rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-[#37A794] transition-all duration-1000 ease-out"
+                                className="h-full bg-[#37A794] progress-animation"
                                 style={{ 
-                                  width: '0%',
-                                  animation: `progressFill 1s ease-out ${(index * 3 + projIndex) * 100 + 200}ms forwards`
-                                }}
-                                onAnimationEnd={(e) => {
-                                  // Set the final width after animation
-                                  (e.target as HTMLElement).style.width = `${project.progress}%`;
-                                }}
+                                  '--progress-width': `${project.progress}%`,
+                                  animationDelay: `${(index * 3 + projIndex) * 100 + 200}ms`
+                                } as React.CSSProperties}
                               ></div>
                             </div>
                           </div>
@@ -367,13 +363,3 @@ export default function ProjectsPage() {
     </div>
   )
 }
-
-// Add this to your global CSS to support the progress bar animation
-const styleTag = document.createElement('style');
-styleTag.textContent = `
-  @keyframes progressFill {
-    from { width: 0%; }
-    to { width: var(--progress-width, 100%); }
-  }
-`;
-document.head.appendChild(styleTag);
