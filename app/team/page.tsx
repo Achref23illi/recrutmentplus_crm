@@ -1,7 +1,7 @@
 // app/team/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { 
   Plus, 
@@ -13,11 +13,12 @@ import {
   Calendar, 
   CheckCircle, 
   Users,
-  User
+  User,
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import AddTeamMemberModal from './AddTeamMemberModal'
+import { useOffice } from '@/contexts/OfficeContext'
 
 interface TeamMember {
   id: string;
@@ -30,6 +31,7 @@ interface TeamMember {
   activeRecruitments: number;
   successfulPlacements: number;
   lastActive: string;
+  officeId: string; // Add officeId
 }
 
 const sampleTeam: TeamMember[] = [
@@ -43,7 +45,8 @@ const sampleTeam: TeamMember[] = [
     tasksCompleted: 42,
     activeRecruitments: 8,
     successfulPlacements: 16,
-    lastActive: '10 min ago'
+    lastActive: '10 min ago',
+    officeId: '1'
   },
   { 
     id: '2', 
@@ -55,7 +58,8 @@ const sampleTeam: TeamMember[] = [
     tasksCompleted: 27,
     activeRecruitments: 12,
     successfulPlacements: 8,
-    lastActive: '3 hours ago'
+    lastActive: '3 hours ago',
+    officeId: '2'
   },
   { 
     id: '3', 
@@ -67,7 +71,8 @@ const sampleTeam: TeamMember[] = [
     tasksCompleted: 15,
     activeRecruitments: 6,
     successfulPlacements: 4,
-    lastActive: '1 day ago'
+    lastActive: '1 day ago',
+    officeId: '1'
   },
   { 
     id: '4', 
@@ -79,7 +84,8 @@ const sampleTeam: TeamMember[] = [
     tasksCompleted: 31,
     activeRecruitments: 9,
     successfulPlacements: 11,
-    lastActive: '2 hours ago'
+    lastActive: '2 hours ago',
+    officeId: '2'
   },
   { 
     id: '5', 
@@ -91,7 +97,8 @@ const sampleTeam: TeamMember[] = [
     tasksCompleted: 53,
     activeRecruitments: 4,
     successfulPlacements: 22,
-    lastActive: '20 min ago'
+    lastActive: '20 min ago',
+    officeId: '1'
   },
   { 
     id: '6', 
@@ -103,7 +110,8 @@ const sampleTeam: TeamMember[] = [
     tasksCompleted: 19,
     activeRecruitments: 7,
     successfulPlacements: 6,
-    lastActive: '5 hours ago'
+    lastActive: '5 hours ago',
+    officeId: '2'
   },
 ]
 
@@ -169,27 +177,48 @@ export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(sampleTeam);
+  const [filteredMembers, setFilteredMembers] = useState<TeamMember[]>(sampleTeam);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
-  // Filter team members based on search query and role filter
-  const filteredTeam = teamMembers.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         member.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = activeFilter === 'All' || member.role === activeFilter;
-    return matchesSearch && matchesFilter;
-  });
-  
-  // Get unique roles for the filter dropdown
-  const roles = ['All', ...Array.from(new Set(teamMembers.map(m => m.role)))];
-  
+  const { currentOffice, userAccessLevel, offices } = useOffice();
+
+  // Filter team members based on office access
+  useEffect(() => {
+    let filtered = teamMembers;
+
+    // Apply office filter if not superAdmin
+    if (userAccessLevel !== 'superAdmin') {
+      filtered = filtered.filter(member => member.officeId === currentOffice.id);
+    }
+
+    // Apply role filter if selected
+    if (activeFilter !== 'All') {
+      filtered = filtered.filter(member => member.role === activeFilter);
+    }
+
+    // Apply search query
+    if (searchQuery) {
+      filtered = filtered.filter(member => 
+        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredMembers(filtered);
+  }, [currentOffice.id, userAccessLevel, activeFilter, searchQuery, teamMembers]);
+
+  // Get office name function
+  const getOfficeName = (officeId: string): string => {
+    return offices.find(o => o.id === officeId)?.city || 'Unknown';
+  };
+
   // Handle adding a new team member
   const handleAddTeamMember = (newTeamMember: TeamMember) => {
     setTeamMembers(prev => [...prev, newTeamMember]);
   };
-  
+
   // Open modal to add team member
   const openAddModal = () => setIsAddModalOpen(true);
-  
+
   return (
     <motion.div 
       className="space-y-8"
@@ -234,7 +263,7 @@ export default function TeamPage() {
               className="pl-4 pr-10 py-2 border border-neutral-700 bg-neutral-800 rounded-lg text-sm text-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#1D4E5F]"
               whileFocus={{ borderColor: "#1D4E5F", boxShadow: "0 0 0 2px rgba(29, 78, 95, 0.25)" }}
             >
-              {roles.map(role => (
+              {['All', ...Array.from(new Set(teamMembers.map(m => m.role)))].map(role => (
                 <option key={role} value={role}>{role}</option>
               ))}
             </motion.select>
@@ -357,8 +386,8 @@ export default function TeamPage() {
           initial="hidden"
           animate="visible"
         >
-          {filteredTeam.length > 0 ? (
-            filteredTeam.map((member, index) => (
+          {filteredMembers.length > 0 ? (
+            filteredMembers.map((member, index) => (
               <motion.div
                 key={member.id}
                 variants={itemVariants}
@@ -393,6 +422,12 @@ export default function TeamPage() {
                               whileHover={{ scale: 1.05 }}
                             >
                               {member.role}
+                            </motion.span>
+                            <motion.span 
+                              className="inline-block px-2.5 py-1 mt-1 rounded-full text-xs font-medium bg-[#1D4E5F]/20 text-[#80BDCA]"
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              {getOfficeName(member.officeId)}
                             </motion.span>
                           </div>
                         </div>

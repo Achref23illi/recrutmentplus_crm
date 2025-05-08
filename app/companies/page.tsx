@@ -23,6 +23,7 @@ import {
 import { AddCompanyModal } from './AddCompanyModal'
 import { FilterDropdown } from './FilterDropdown'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useOffice } from '@/contexts/OfficeContext'
 
 interface Company {
   id: string
@@ -30,16 +31,17 @@ interface Company {
   industry: string
   openPositions: number
   contact: string
+  officeId: string // Add officeId to identify which office the company belongs to
 }
 
 // Dummy data for now
 const sampleCompanies: Company[] = [
-  { id: '1', name: 'Acme Corp', industry: 'Tech', openPositions: 5, contact: 'hr@acme.com' },
-  { id: '2', name: 'Global Health', industry: 'Healthcare', openPositions: 2, contact: 'jobs@gh.com' },
-  { id: '3', name: 'FinTrust', industry: 'Finance', openPositions: 8, contact: 'careers@fintrust.com' },
-  { id: '4', name: 'EcoSolutions', industry: 'Environmental', openPositions: 3, contact: 'jobs@ecosolutions.com' },
-  { id: '5', name: 'DataVision', industry: 'Tech', openPositions: 6, contact: 'hiring@datavision.com' },
-  { id: '6', name: 'BuildWell', industry: 'Construction', openPositions: 4, contact: 'hr@buildwell.com' },
+  { id: '1', name: 'TechCorp', industry: 'Tech', openPositions: 5, contact: 'hr@techcorp.com', officeId: '1' },
+  { id: '2', name: 'MediHealth', industry: 'Healthcare', openPositions: 2, contact: 'hiring@medihealth.com', officeId: '1' },
+  { id: '3', name: 'FinTrust', industry: 'Finance', openPositions: 8, contact: 'careers@fintrust.com', officeId: '2' },
+  { id: '4', name: 'EcoSolutions', industry: 'Environmental', openPositions: 3, contact: 'jobs@ecosolutions.com', officeId: '2' },
+  { id: '5', name: 'DataVision', industry: 'Tech', openPositions: 6, contact: 'hiring@datavision.com', officeId: '3' },
+  { id: '6', name: 'BuildWell', industry: 'Construction', openPositions: 4, contact: 'hr@buildwell.com', officeId: '3' },
 ]
 
 // Map filter IDs to actual values
@@ -57,6 +59,8 @@ export default function CompaniesPage() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [searchQuery, setSearchQuery] = useState('')
+
+  const { currentOffice, userAccessLevel } = useOffice()
 
   // Animation variants
   const containerVariants = {
@@ -215,6 +219,7 @@ export default function CompaniesPage() {
       industry: companyData.industry,
       openPositions: 0, // Default value
       contact: companyData.contactEmail || 'No contact available',
+      officeId: currentOffice.id // Assign to current office
     }
     
     setCompanies([newCompany, ...companies])
@@ -260,20 +265,37 @@ export default function CompaniesPage() {
   };
 
   // Handle search query
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    
-    // Filter companies based on search query
-    if (e.target.value === '') {
-      setCompanies(sampleCompanies);
+  useEffect(() => {
+    // For superAdmin, we can show all companies or filter by the selected office
+    if (userAccessLevel === 'superAdmin') {
+      if (searchQuery) {
+        // If there's a search query, filter by both search and office
+        const filtered = sampleCompanies.filter(company => 
+          (company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          company.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          company.contact.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+        setCompanies(filtered);
+      } else {
+        // Just filter by selected office if no search
+        setCompanies(sampleCompanies);
+      }
     } else {
+      // Non-superAdmin users can only see companies from their office
       const filtered = sampleCompanies.filter(company => 
-        company.name.toLowerCase().includes(e.target.value.toLowerCase()) ||
-        company.industry.toLowerCase().includes(e.target.value.toLowerCase()) ||
-        company.contact.toLowerCase().includes(e.target.value.toLowerCase())
+        company.officeId === currentOffice.id &&
+        (searchQuery ? 
+          (company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          company.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          company.contact.toLowerCase().includes(searchQuery.toLowerCase())) : true
+        )
       );
       setCompanies(filtered);
     }
+  }, [currentOffice.id, searchQuery, userAccessLevel]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   return (
@@ -375,11 +397,21 @@ export default function CompaniesPage() {
                   >
                     Contact
                   </motion.th>
+                  {userAccessLevel === 'superAdmin' && (
+                    <motion.th 
+                      className="px-6 py-3 text-sm font-medium text-neutral-300"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      Office
+                    </motion.th>
+                  )}
                   <motion.th 
                     className="px-6 py-3 text-sm font-medium text-neutral-300"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.65 }}
                   >
                     Actions
                   </motion.th>
@@ -443,6 +475,15 @@ export default function CompaniesPage() {
                         </motion.div>
                       </td>
                       <td className="px-6 py-4 text-sm text-neutral-400">{company.contact}</td>
+                      {userAccessLevel === 'superAdmin' && (
+                        <td className="px-6 py-4">
+                          <motion.span 
+                            className="px-2 py-1 text-xs rounded-full bg-[#1D4E5F]/20 text-[#80BDCA]"
+                          >
+                            {currentOffice.city || 'Unknown'}
+                          </motion.span>
+                        </td>
+                      )}
                       <td className="px-6 py-4 relative">
                         <motion.button 
                           type="button" 

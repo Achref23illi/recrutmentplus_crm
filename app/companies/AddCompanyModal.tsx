@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-//import { Modal } from '@/components/ui/modal'
+import { useOffice } from '@/contexts/OfficeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const industries = [
@@ -39,10 +39,13 @@ interface AddCompanyModalProps {
     contactEmail: string;
     contactPhone: string;
     notes: string;
+    officeId: string;
   }) => void
 }
 
 export function AddCompanyModal({ isOpen, onClose, onSubmit }: AddCompanyModalProps) {
+  const { currentOffice, offices, userAccessLevel } = useOffice()
+
   const [form, setForm] = useState({
     name: '',
     website: '',
@@ -53,7 +56,8 @@ export function AddCompanyModal({ isOpen, onClose, onSubmit }: AddCompanyModalPr
     contactName: '',
     contactEmail: '',
     contactPhone: '',
-    notes: ''
+    notes: '',
+    officeId: currentOffice.id // Default to current office
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -74,7 +78,8 @@ export function AddCompanyModal({ isOpen, onClose, onSubmit }: AddCompanyModalPr
       contactName: '',
       contactEmail: '',
       contactPhone: '',
-      notes: ''
+      notes: '',
+      officeId: currentOffice.id
     })
     onClose()
   }
@@ -358,6 +363,26 @@ export function AddCompanyModal({ isOpen, onClose, onSubmit }: AddCompanyModalPr
             className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] transition-shadow"
           />
         </motion.div>
+
+        {/* Office Selection (for Super Admin only) */}
+        {userAccessLevel === 'superAdmin' && (
+          <motion.div variants={formItemVariants}>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Office</label>
+            <motion.select
+              whileFocus={{ boxShadow: "0 0 0 2px #1D4E5F" }}
+              transition={{ duration: 0.2 }}
+              name="officeId"
+              value={form.officeId}
+              onChange={handleChange}
+              title="Company Office"
+              className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F] transition-shadow"
+            >
+              {offices.map(office => (
+                <option key={office.id} value={office.id}>{office.city}</option>
+              ))}
+            </motion.select>
+          </motion.div>
+        )}
 
         {/* Action buttons */}
         <motion.div 

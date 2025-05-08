@@ -8,15 +8,18 @@ import {
   Briefcase,
   TrendingUp,
   TrendingDown,
-  CalendarClock,
-  CircleUser,
+  //CalendarClock,
+  //CircleUser,
   ChevronRight,
   FolderPlus,
-  Folders
+  Folders,
+  Users,
+  Building
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, Variants, useMotionValue, useTransform, useInView } from 'framer-motion';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
+import { useOffice } from '@/contexts/OfficeContext';
 
 // Define reusable animation variants
 const containerVariants: Variants = {
@@ -64,7 +67,7 @@ const cardVariants: Variants = {
 interface KpiCardProps {
   title: string;
   value: string | number;
-  change: string;
+  change?: string;
   isPositive?: boolean;
   suffix?: string;
   icon: React.ReactNode;
@@ -108,9 +111,11 @@ function KpiCard({
           <p className="text-sm font-medium text-neutral-400">{title}</p>
           <div className="flex items-end gap-2 mt-1">
             <p className="text-2xl font-bold text-white">{value}{suffix ? <span className="text-base ml-1 font-medium">{suffix}</span> : ''}</p>
-            <span className={`text-xs font-medium ${isPositive ? 'text-[#51B3A2]' : 'text-red-400'} pb-1 flex items-center`}>
-              {isPositive ? <TrendingUp size={12} className="mr-0.5" /> : <TrendingDown size={12} className="mr-0.5" />} {change}
-            </span>
+            {change && (
+              <span className={`text-xs font-medium ${isPositive ? 'text-[#51B3A2]' : 'text-red-400'} pb-1 flex items-center`}>
+                {isPositive ? <TrendingUp size={12} className="mr-0.5" /> : <TrendingDown size={12} className="mr-0.5" />} {change}
+              </span>
+            )}
           </div>
           <p className="text-xs text-neutral-500 mt-1">{compareText}</p>
         </div>
@@ -182,6 +187,36 @@ export default function DashboardPage() {
   const isPipelineInView = useInView(pipelineRef, { once: true, amount: 0.3 });
   const isActivitiesInView = useInView(activitiesRef, { once: true, amount: 0.3 });
 
+  const { currentOffice, userAccessLevel } = useOffice();
+
+  // Filter KPI data by office
+  const getOfficeFilteredData = useCallback(() => {
+    // This is where you'd normally fetch data from an API with the office filter
+    // For now we'll simulate different data for different offices
+    
+    // Sample multipliers for different offices
+    const officeMultipliers: Record<string, number> = {
+      '1': 1,    // Montreal (base numbers)
+      '2': 1.2,  // Dubai (20% higher)
+      '3': 0.8   // Istanbul (20% lower)
+    };
+    
+    const multiplier = officeMultipliers[currentOffice.id] || 1;
+    
+    // Adjust KPI numbers based on selected office
+    return {
+      openPositions: Math.round(24 * multiplier),
+      positionsChange: '+5%',
+      placements: Math.round(76 * multiplier),
+      placementsChange: '+18%',
+      timeToHire: Math.round(32 * (1/multiplier)),  // Inverse relationship for time metrics
+      timeToHireChange: 'Better',
+      activeRecruitments: Math.round(18 * multiplier)
+    };
+  }, [currentOffice.id]);
+
+  const dashboardData = getOfficeFilteredData();
+
   // Mock data for pipeline stages
   const pipelineStages = [
     { name: 'Applied', count: 45, color: 'bg-[#1D4E5F]' },
@@ -229,91 +264,59 @@ export default function DashboardPage() {
       animate="visible"
       variants={containerVariants}
     >
-      {/* Welcome section with date */}
-      <motion.div 
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        variants={itemVariants}
-      >
-        <div>
-          <motion.h2 
-            className="text-3xl font-bold text-[#80BDCA]"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+      {/* Welcome section with date and office indicator */}
+      <div className="flex flex-wrap items-center justify-between">
+        <motion.div variants={itemVariants}>
+          <h1 className="text-2xl font-semibold text-white">
             Welcome back, John
-          </motion.h2>
-          <motion.p 
-            className="text-neutral-400 mt-1"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            Here&apos;s what&apos;s happening with your recruitment today
-          </motion.p>
-        </div>
-        <motion.div 
-          className="flex items-center gap-2 bg-neutral-800 px-4 py-2 rounded-lg border border-neutral-700"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          whileHover={{ 
-            scale: 1.05,
-            boxShadow: "0 5px 15px rgba(0,0,0,0.1)"
-          }}
-        >
-          <CalendarClock size={18} className="text-[#80BDCA]" />
-          <span className="font-medium text-neutral-300">April 20, 2025</span>
+          </h1>
+          <p className="text-neutral-400">
+            April 20, 2025 · {currentOffice.city} Office
+          </p>
         </motion.div>
-      </motion.div>
+      </div>
 
-      {/* KPI cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <KpiCard
-          title="Active Candidates"
-          value="128"
-          change="+12%"
-          isPositive={true}
-          icon={<CircleUser size={24} />}
-          delay={0.1}
-        />
-        
-        <KpiCard
           title="Open Positions"
-          value="24"
-          change="+5%"
+          value={dashboardData.openPositions.toString()}
+          change={dashboardData.positionsChange}
           isPositive={true}
           icon={<Briefcase size={24} />}
           bgColor="[#37A794]/10"
           iconBgColor="[#37A794]/20"
           iconColor="[#51B3A2]"
-          delay={0.2}
         />
         
         <KpiCard
           title="Placements"
-          value="76"
-          change="+18%"
+          value={dashboardData.placements.toString()}
+          change={dashboardData.placementsChange}
           isPositive={true}
           icon={<UserCheck size={24} />}
-          delay={0.3}
         />
         
         <KpiCard
           title="Avg. Time to Hire"
-          value="32"
+          value={dashboardData.timeToHire.toString()}
           suffix="days"
-          change="Better"
+          change={dashboardData.timeToHireChange}
           isPositive={true}
           icon={<Clock size={24} />}
           bgColor="[#37A794]/10"
           iconBgColor="[#37A794]/20"
           iconColor="[#51B3A2]"
           compareText="Industry avg: 36 days"
-          delay={0.4}
+        />
+
+        <KpiCard
+          title="Active Recruitments"
+          value={dashboardData.activeRecruitments.toString()}
+          icon={<Users size={24} />}
         />
       </div>
-
+      
       {/* Recruitment pipeline and Upcoming Activities with Project buttons */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pipeline visualization */}
@@ -594,6 +597,16 @@ export default function DashboardPage() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Office badge on charts for Super Admin */}
+      {userAccessLevel === 'superAdmin' && (
+        <div className="absolute top-6 right-6 z-10">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#1D4E5F]/20 text-[#80BDCA]">
+            <Building size={14} className="mr-1" />
+            {currentOffice.city}
+          </span>
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Modal } from '@/components/ui/modal'
 import { Upload, Save } from 'lucide-react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
+import { useOffice } from '@/contexts/OfficeContext'
 
 // Role options for the team member
 const roleOptions = [
@@ -75,10 +76,13 @@ interface AddTeamMemberModalProps {
     activeRecruitments: number
     successfulPlacements: number
     lastActive: string
+    officeId: string
   }) => void
 }
 
 export default function AddTeamMemberModal({ isOpen, onClose, onSave }: AddTeamMemberModalProps) {
+  const { offices, currentOffice, userAccessLevel } = useOffice();
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
@@ -93,9 +97,10 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSave }: AddTeamM
     location: '',
     startDate: '',
     avatar: null,
+    officeId: currentOffice.id, // Default to current office
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  
+
   // Update form data
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target
@@ -202,6 +207,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSave }: AddTeamM
       location: '',
       startDate: '',
       avatar: null,
+      officeId: currentOffice.id,
     })
     setErrors({})
   }
@@ -603,6 +609,56 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSave }: AddTeamM
                     </motion.label>
                   </motion.div>
                 </motion.div>
+
+                {/* Office selection (for superAdmin only) */}
+                {userAccessLevel === 'superAdmin' && (
+                  <motion.div 
+                    className="space-y-4 pt-4 border-t border-neutral-700"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.1,
+                          delayChildren: 0.3
+                        }
+                      }
+                    }}
+                  >
+                    <motion.h3 
+                      className="text-base font-medium text-white"
+                      variants={formGroupVariants}
+                      custom={0}
+                    >
+                      Office Selection
+                    </motion.h3>
+                    
+                    <motion.div 
+                      className="mb-4"
+                      variants={formGroupVariants}
+                      custom={3}
+                    >
+                      <label htmlFor="office" className="block text-sm font-medium text-neutral-300 mb-1">
+                        Office
+                      </label>
+                      <motion.select
+                        id="office"
+                        name="officeId"
+                        value={formData.officeId}
+                        onChange={handleChange}
+                        className="w-full border border-neutral-700 bg-neutral-900 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#1D4E5F]"
+                        variants={inputVariants}
+                        whileFocus="focus"
+                      >
+                        {offices.map(office => (
+                          <option key={office.id} value={office.id}>{office.city} Office</option>
+                        ))}
+                      </motion.select>
+                    </motion.div>
+                  </motion.div>
+                )}
               </div>
               
               {/* Right Column - Avatar and Start Date */}
